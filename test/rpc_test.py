@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-import functools
 import sys
 import unittest
 from os import getenv
@@ -11,14 +10,9 @@ import torch
 import torch.distributed as dist
 import torch.distributed.rpc_backend_registry as rpc_backend_registry
 
-
-if not dist.is_available():
-    print("c10d not available, skipping tests")
-    sys.exit(0)
-
 from common_utils import load_tests
 from torch.distributed.rpc_api import RpcBackend
-
+from dist_utils import dist_init
 
 BACKEND = getenv("RPC_BACKEND", RpcBackend.PROCESS_GROUP)
 RPC_INIT_URL = getenv("RPC_INIT_URL", "")
@@ -80,32 +74,6 @@ class my_class:
 load_tests = load_tests
 
 
-def _wrap_with_rpc(test_method):
-    """
-        We use this decorator for setting up and tearing down state since
-        MultiProcessTestCase runs each `test*` method in a separate process and
-        each process just runs the `test*` method without actually calling
-        'setUp' and 'tearDown' methods of unittest.
-    """
-
-    @functools.wraps(test_method)
-    def wrapper(self, *arg, **kwargs):
-        store = dist.FileStore(self.file_name, self.world_size)
-        dist.init_process_group(
-            backend="gloo", rank=self.rank, world_size=self.world_size, store=store
-        )
-        dist.init_model_parallel(
-            self_name="worker%d" % self.rank,
-            backend=BACKEND,
-            self_rank=self.rank,
-            init_method=RPC_INIT_URL,
-        )
-        test_method(self, *arg, **kwargs)
-        dist.join_rpc()
-
-    return wrapper
-
-
 @unittest.skipIf(
     sys.version_info < (3, 0),
     "Pytorch distributed rpc package " "does not support python2",
@@ -115,7 +83,7 @@ class RpcTest(object):
     def world_size(self):
         return 4
 
-    @_wrap_with_rpc
+    @dist_init
     def test_worker_id(self):
         n = self.rank + 1
         peer_rank = n % self.world_size
@@ -128,7 +96,7 @@ class RpcTest(object):
         with self.assertRaisesRegex(RuntimeError, "Unknown destination worker"):
             unknown_worker_id = dist.get_worker_id("WorkerUnknown")
 
-    @_wrap_with_rpc
+    @dist_init
     def test_self_add(self):
         self_worker_id = dist.get_worker_id()
         self_worker_name = "worker{}".format(self.rank)
@@ -228,7 +196,7 @@ class RpcTest(object):
             )
         dist.join_rpc()
 
-    @_wrap_with_rpc
+    @dist_init
     def test_add(self):
         n = self.rank + 1
         dst_rank = n % self.world_size
@@ -239,7 +207,7 @@ class RpcTest(object):
         )
         self.assertEqual(ret, torch.ones(n, n) * 2)
 
-    @_wrap_with_rpc
+    @dist_init
     def test_add_with_id(self):
         n = self.rank + 1
         dst_rank = n % self.world_size
@@ -250,7 +218,7 @@ class RpcTest(object):
         )
         self.assertEqual(ret, torch.ones(n, n) * 2)
 
-    @_wrap_with_rpc
+    @dist_init
     def test_scalar_add(self):
         n = self.rank + 1
         dst_rank = n % self.world_size
@@ -259,7 +227,7 @@ class RpcTest(object):
         )
         self.assertEqual(ret, (torch.ones(n, n) + n))
 
-    @_wrap_with_rpc
+    @dist_init
     def test_async_add(self):
         n = self.rank + 1
         dst_rank = n % self.world_size
@@ -270,7 +238,7 @@ class RpcTest(object):
         )
         self.assertEqual(fut.wait(), torch.ones(n, n) * 2)
 
-    @_wrap_with_rpc
+    @dist_init
     def test_nonzero(self):
         n = self.rank + 1
         dst_rank = n % self.world_size
@@ -279,7 +247,7 @@ class RpcTest(object):
         ret = dist.rpc_sync("worker{}".format(dst_rank), torch.nonzero, args=(x,))
         self.assertEqual(ret, x.nonzero())
 
-    @_wrap_with_rpc
+    @dist_init
     def test_multi_rpc(self):
         dst_rank = (self.rank + 1) % self.world_size
         for i in range(20):
@@ -291,7 +259,7 @@ class RpcTest(object):
             )
             self.assertEqual(ret, torch.ones(n, n) * 2)
 
-    @_wrap_with_rpc
+    @dist_init
     def test_sync_rpc(self):
         dst_rank = (self.rank + 1) % self.world_size
         for i in range(20):
@@ -310,7 +278,7 @@ class RpcTest(object):
             self.assertEqual(ret1, torch.ones(n, n) * 2)
             self.assertEqual(ret2, torch.ones(n, n) * 3)
 
-    @_wrap_with_rpc
+    @dist_init
     def test_join_rpc(self):
         n = self.rank + 1
         dst_rank = n % self.world_size
@@ -332,14 +300,14 @@ class RpcTest(object):
         # it's safe to call join_rpc() multiple times
         dist.join_rpc()
 
-    @_wrap_with_rpc
+    @dist_init
     def test_py_built_in(self):
         n = self.rank + 1
         dst_rank = n % self.world_size
         ret = dist.rpc_sync("worker{}".format(dst_rank), min, args=(n, n + 1, n + 2))
         self.assertEqual(ret, min(n, n + 1, n + 2))
 
-    @_wrap_with_rpc
+    @dist_init
     def test_py_user_defined(self):
         n = self.rank + 1
         dst_rank = n % self.world_size
@@ -350,14 +318,14 @@ class RpcTest(object):
         )
         self.assertEqual(ret, my_function(n, n + 1, n + 2))
 
-    @_wrap_with_rpc
+    @dist_init
     def test_py_class_constructor(self):
         n = self.rank + 1
         dst_rank = n % self.world_size
         ret = dist.rpc_sync("worker{}".format(dst_rank), my_class, args=(n,))
         self.assertEqual(ret.a, n)
 
-    @_wrap_with_rpc
+    @dist_init
     def test_py_class_instance_method(self):
         n = self.rank + 1
         dst_rank = n % self.world_size
@@ -366,7 +334,7 @@ class RpcTest(object):
         )
         self.assertEqual(ret, my_class(2).my_instance_method(n))
 
-    @_wrap_with_rpc
+    @dist_init
     def test_py_class_method(self):
         n = self.rank + 1
         dst_rank = n % self.world_size
@@ -375,7 +343,7 @@ class RpcTest(object):
         )
         self.assertEqual(ret, my_class.my_class_method(n, n + 1))
 
-    @_wrap_with_rpc
+    @dist_init
     def test_py_class_static_method(self):
         n = self.rank + 1
         dst_rank = n % self.world_size
@@ -384,7 +352,7 @@ class RpcTest(object):
         )
         self.assertEqual(ret, my_class.my_static_method(n + 10))
 
-    @_wrap_with_rpc
+    @dist_init
     def test_py_multi_async_call(self):
         n = self.rank + 1
         dst_rank = n % self.world_size
@@ -394,21 +362,21 @@ class RpcTest(object):
         self.assertEqual(fut1.wait(), my_class.my_static_method(n + 10))
         self.assertEqual(fut2.wait(), min(n, n + 1, n + 2))
 
-    @_wrap_with_rpc
+    @dist_init
     def test_py_no_return_result(self):
         n = self.rank + 1
         dst_rank = n % self.world_size
         ret = dist.rpc_sync("worker{}".format(dst_rank), no_result)
         self.assertEqual(ret, no_result())
 
-    @_wrap_with_rpc
+    @dist_init
     def test_py_function_exception(self):
         n = self.rank + 1
         dst_rank = n % self.world_size
         with self.assertRaisesRegex(Exception, "TypeError"):
             ret = dist.rpc_sync("worker{}".format(dst_rank), no_result, args=(10,))
 
-    @_wrap_with_rpc
+    @dist_init
     def test_py_raise_in_user_func(self):
         n = self.rank + 1
         dst_rank = n % self.world_size
@@ -416,7 +384,7 @@ class RpcTest(object):
         with self.assertRaisesRegex(Exception, "ValueError"):
             fut.wait()
 
-    @_wrap_with_rpc
+    @dist_init
     def test_nested_rpc(self):
         n = self.rank + 1
         dst_rank = n % self.world_size
@@ -447,15 +415,15 @@ class RpcTest(object):
             )
         )
 
-    @_wrap_with_rpc
+    @dist_init
     def test_stress_light_rpc(self):
         self._stress_test_rpc(light_rpc)
 
-    @_wrap_with_rpc
+    @dist_init
     def test_stress_heavy_rpc(self):
         self._stress_test_rpc(heavy_rpc, repeat=20, args=(torch.ones(100, 100),))
 
-    @_wrap_with_rpc
+    @dist_init
     def test_builtin_remote_ret(self):
         n = self.rank + 1
         dst_rank = n % self.world_size
@@ -466,7 +434,7 @@ class RpcTest(object):
         )
         self.assertEqual(rref.to_here(), torch.ones(n, n) * 2)
 
-    @_wrap_with_rpc
+    @dist_init
     def test_multi_builtin_remote_ret(self):
         m = 10
         n = self.rank + 1
