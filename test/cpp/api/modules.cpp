@@ -1370,3 +1370,9 @@ TEST_F(ModulesTest, PrettyPrintLeakyReLU) {
 TEST_F(ModulesTest, PrettyPrintLogSigmoid) {
   ASSERT_EQ(c10::str(LogSigmoid()), "torch::nn::LogSigmoid()");
 }
+
+TEST_F(ModulesTest, Softmax) {
+  Softmax m;
+  auto input = torch::arange(9, torch::kFloat).reshape({1, 1, 3, 3});
+  auto output = m(input);
+}

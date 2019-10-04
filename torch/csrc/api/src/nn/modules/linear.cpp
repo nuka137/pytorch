@@ -49,5 +49,20 @@ Tensor LinearImpl::forward(const Tensor& input) {
   AT_ASSERT(!options.with_bias() || bias.defined());
   return torch::linear(input, weight, bias);
 }
+
+// ============================================================================
+
+SoftmaxImpl::SoftmaxImpl() {}
+
+void SoftmaxImpl::reset() {}
+
+void SoftmaxImpl::pretty_print(std::ostream& stream) const {
+  stream << "torch::nn::Softmax";
+}
+
+Tensor SoftmaxImpl::forward(const Tensor& input) {
+  return input.softmax(0);
+}
+
 } // namespace nn
 } // namespace torch

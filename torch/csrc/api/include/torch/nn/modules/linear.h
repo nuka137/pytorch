@@ -63,5 +63,19 @@ class TORCH_API LinearImpl : public Cloneable<LinearImpl> {
 /// module storage semantics.
 TORCH_MODULE(Linear);
 
+
+class TORCH_API SoftmaxImpl : public Cloneable<SoftmaxImpl> {
+ public:
+  SoftmaxImpl();
+
+  Tensor forward(const Tensor& input);
+
+  void reset() override;
+
+  void pretty_print(std::ostream& stream) const override;
+};
+
+TORCH_MODULE(Softmax);
+
 } // namespace nn
 } // namespace torch
