@@ -1372,21 +1372,24 @@ TEST_F(ModulesTest, PrettyPrintLogSigmoid) {
 }
 
 TEST_F(ModulesTest, Softmax) {
-  Softmax m(SoftmaxOptions().dim(0));
-  auto input = torch::arange(10, torch::kFloat);
-  auto output = m(input);
-  auto sum = torch::sum(torch::exp(input));
-  auto expected = torch::exp(input) / sum;
-  ASSERT_TRUE(torch::allclose(output, expected));
-}
+  {
+    Softmax m(SoftmaxOptions().dim(0));
+    auto input = torch::arange(10, torch::kFloat);
+    auto output = m(input);
+    auto sum = torch::sum(torch::exp(input));
+    auto expected = torch::exp(input) / sum;
+    ASSERT_TRUE(torch::allclose(output, expected));
+  }
 
-TEST_F(ModulesTest, Softmax2) {
-  Softmax m(SoftmaxOptions().dim(1));
-  auto input = torch::arange(10, torch::kFloat).reshape({2, 5});
-  auto output = m(input);
-  auto sum = torch::sum(torch::exp(input), 1);
-  auto expected = torch::exp(input[1]) / sum[1];
-  std::cout << "Output: " << output << std::endl;
-  std::cout << "Expected: " << expected << std::endl;
-  ASSERT_TRUE(torch::allclose(output, expected));
+  {
+    Softmax m(SoftmaxOptions().dim(1));
+    auto input = torch::arange(10, torch::kFloat).reshape({2, 5});
+    auto output = m(input);
+    auto sum = torch::sum(torch::exp(input), 1);
+
+    for (int i = 0; i < 2; i++) {
+      auto expected = torch::exp(input[i]) / sum[i];
+      ASSERT_TRUE(torch::allclose(output[i], expected));
+    }
+  }
 }
