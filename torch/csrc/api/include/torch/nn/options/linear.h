@@ -18,10 +18,5 @@ struct TORCH_API LinearOptions {
   TORCH_ARG(bool, with_bias) = true;
 };
 
-/// Options for the `Softmax` module.
-struct TORCH_API SoftmaxOptions {
-  TORCH_ARG(int, dim);
-};
-
 } // namespace nn
 } // namespace torch

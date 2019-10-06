@@ -43,8 +43,6 @@ struct HardtanhOptions {
   TORCH_ARG(bool, inplace) = false;
 };
 
-// ============================================================================
-
 /// Options for LeakyReLU functional and module.
 struct LeakyReLUOptions {
   LeakyReLUOptions() {}
@@ -55,6 +53,16 @@ struct LeakyReLUOptions {
   /// can optionally do the operation in-place. Default: False
   TORCH_ARG(bool, inplace) = false;
 };
+
+// ============================================================================
+
+/// Options for the `Softmax` module.
+struct TORCH_API SoftmaxOptions {
+  // Dimension along which Softmax will be computed.
+  TORCH_ARG(int, dim);
+};
+
+
 
 } // namespace nn
 } // namespace torch
