@@ -912,4 +912,3 @@ TEST_F(ModuleTest, CanCallForwardOnNonTensorForwardThroughPimpl) {
   ModuleWithNonTensorForward m;
   ASSERT_EQ(m(torch::ones(123)), 123);
 }
-

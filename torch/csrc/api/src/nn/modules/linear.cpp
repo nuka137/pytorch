@@ -52,16 +52,17 @@ Tensor LinearImpl::forward(const Tensor& input) {
 
 // ============================================================================
 
-SoftmaxImpl::SoftmaxImpl() {}
+SoftmaxImpl::SoftmaxImpl(const SoftmaxOptions& options_)
+    : options(options_) {}
 
 void SoftmaxImpl::reset() {}
 
 void SoftmaxImpl::pretty_print(std::ostream& stream) const {
-  stream << "torch::nn::Softmax";
+  stream << "torch::nn::Softmax(dim=" << options.dim() << ")";
 }
 
 Tensor SoftmaxImpl::forward(const Tensor& input) {
-  return input.softmax(0);
+  return input.softmax(options.dim());
 }
 
 } // namespace nn

@@ -66,13 +66,16 @@ TORCH_MODULE(Linear);
 
 class TORCH_API SoftmaxImpl : public Cloneable<SoftmaxImpl> {
  public:
-  SoftmaxImpl();
+  SoftmaxImpl(const SoftmaxOptions& options_);
 
   Tensor forward(const Tensor& input);
 
   void reset() override;
 
   void pretty_print(std::ostream& stream) const override;
+
+ private:
+  SoftmaxOptions options;
 };
 
 TORCH_MODULE(Softmax);
