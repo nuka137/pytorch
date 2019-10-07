@@ -146,6 +146,21 @@ Tensor LogSoftmaxImpl::forward(const Tensor& input) {
 
 // ============================================================================
 
+Softmax2dImpl::Softmax2dImpl() {}
+
+void Softmax2dImpl::reset() {}
+
+void Softmax2dImpl::pretty_print(std::ostream& stream) const {
+  stream << "torch::nn:Softmax2d()";
+}
+
+Tensor Softmax2dImpl::forward(const Tensor& input) {
+  ASSERT_EQ(input.dim(), 4);
+  return F::softmax(input, SoftmaxOptions(/*dim=*/1));
+}
+
+// ============================================================================
+
 PReLUImpl::PReLUImpl(const PReLUOptions& options_) : options(options_) {
   reset();
 }
