@@ -2,6 +2,7 @@
 
 #include <torch/arg.h>
 #include <torch/csrc/WindowsTorchApiMacro.h>
+#include <torch/types.h>
 
 namespace torch {
 namespace nn {
@@ -54,6 +55,21 @@ struct LeakyReLUOptions {
 
   /// can optionally do the operation in-place. Default: False
   TORCH_ARG(bool, inplace) = false;
+};
+
+// ============================================================================
+
+/// Options for Softmin functional and module.
+struct TORCH_API SoftminOptions {
+  SoftminOptions(int dim = -1, torch::Dtype dtype = torch::Dtype::Undefined);
+
+  // Dimension along which Softmin will be computed.
+  TORCH_ARG(int, dim);
+
+  // The desired data type of returned tensor.
+  // If specified, the input tensor is casted to dtype before the operation
+  // is performed. This is useful for preventing data type overflows.
+  TORCH_ARG(torch::Dtype, dtype);
 };
 
 } // namespace nn

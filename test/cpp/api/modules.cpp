@@ -1116,6 +1116,29 @@ TEST_F(ModulesTest, LogSigmoid) {
   ASSERT_TRUE(torch::allclose(y, y_exp, 1e-4, 1e-7));
 }
 
+TEST_F(ModulesTest, Softmin) {
+  {
+    Softmin m;
+    auto input = torch::arange(10, torch::kFloat);
+    auto output = m(input);
+    auto sum = torch::sum(torch::exp(-input));
+    auto expected = torch::exp(-input) / sum;
+    ASSERT_TRUE(torch::allclose(output, expected));
+  }
+
+  {
+    Softmin m(SoftminOptions().dim(1));
+    auto input = torch::arange(10, torch::kFloat).reshape({2, 5});
+    auto output = m(input);
+    auto sum = torch::sum(torch::exp(-input), 1);
+
+    for (int i = 0; i < 2; i++) {
+      auto expected = torch::exp(-input[i]) / sum[i];
+      ASSERT_TRUE(torch::allclose(output[i], expected));
+    }
+  }
+}
+
 TEST_F(ModulesTest, PrettyPrintIdentity) {
   ASSERT_EQ(c10::str(Identity()), "torch::nn::Identity()");
 }
@@ -1369,4 +1392,11 @@ TEST_F(ModulesTest, PrettyPrintLeakyReLU) {
 
 TEST_F(ModulesTest, PrettyPrintLogSigmoid) {
   ASSERT_EQ(c10::str(LogSigmoid()), "torch::nn::LogSigmoid()");
+}
+
+TEST_F(ModulesTest, PrettyPrintSoftmin) {
+  ASSERT_EQ(c10::str(Softmin(SoftminOptions())), "torch::nn::Softmin()");
+  ASSERT_EQ(c10::str(Softmin(SoftminOptions().dim(1))), "torch::nn::Softmin(dim=1)");
+  ASSERT_EQ(c10::str(Softmin(SoftminOptions().dim(2),dtype(torch::kFloat))),
+            "torch::nn::Softmin(dim=2, dtype=Float)");
 }

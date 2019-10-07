@@ -96,5 +96,32 @@ void LogSigmoidImpl::pretty_print(std::ostream& stream) const {
   stream << "torch::nn::LogSigmoid()";
 }
 
+// ============================================================================
+
+SoftminImpl::SoftminImpl(const SoftminOptions& options_)
+    : options(options_) {}
+
+void SoftminImpl::reset() {}
+
+void SoftminImpl::pretty_print(std::ostream& stream) const {
+  int dim = options.dim();
+  torch::Dtype dtype = options.dtype();
+  stream << "torch::nn::Softmin(";
+  if (dim != -1) {
+    stream << "dim=" << options.dim();
+    if (dtype != torch::Dtype::Undefined) {
+      stream << ", ";
+    }
+  }
+  if (dtype != torch::Dtype::Undefined) {
+    stream << "dtype=" << options.dtype();
+  }
+  stream << ")";
+}
+
+Tensor SoftminImpl::forward(const Tensor& input) {
+  return F::softmin(input, options);
+}
+
 } // namespace nn
 } // namespace torch
