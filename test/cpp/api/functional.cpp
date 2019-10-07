@@ -373,7 +373,7 @@ TEST_F(FunctionalTest, Softmin) {
   {
     auto input = torch::arange(10, torch::kFloat).reshape({2, 5});
     auto output = F::softmin(input, SoftminOptions().dim(1));
-    auto sum = torch::sum(torch::exp(-input));
+    auto sum = torch::sum(torch::exp(-input), 1);
 
     for (int i = 0; i < 2; i++) {
       auto expected = torch::exp(-input[i]) / sum[i];
