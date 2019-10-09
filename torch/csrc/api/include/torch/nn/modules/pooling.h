@@ -397,5 +397,26 @@ class TORCH_API MaxUnpool3dImpl : public MaxUnpoolImpl<3, MaxUnpool3dImpl> {
 /// module storage semantics.
 TORCH_MODULE(MaxUnpool3d);
 
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ LPPool1d ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+/// Applies the LPPool1d function element-wise.
+/// See https://pytorch.org/docs/master/nn.html#torch.nn.LPPool1d to learn
+/// about the exact behavior of this module.
+class TORCH_API LPPool1dImpl : public torch::nn::Cloneable<LPPool1dImpl> {
+ public:
+  LPPool1dImpl(const LPPool1dOptions& options_);
+
+  Tensor forward(const Tensor& input);
+
+  void reset() override;
+
+  /// Pretty prints the `LPPool1d` module into the given `stream`.
+  void pretty_print(std::ostream& stream) const override;
+
+  LPPool1dOptions options;
+};
+
+TORCH_MODULE(LPPool1d);
+
 } // namespace nn
 } // namespace torch
