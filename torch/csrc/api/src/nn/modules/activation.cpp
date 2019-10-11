@@ -155,7 +155,7 @@ void Softmax2dImpl::pretty_print(std::ostream& stream) const {
 }
 
 Tensor Softmax2dImpl::forward(const Tensor& input) {
-  ASSERT_EQ(input.dim(), 4);
+  TORCH_CHECK(input.dim() == 4, "Softmax2d requires a 4D tensor as input");
   return F::softmax(input, SoftmaxOptions(/*dim=*/1));
 }
 
