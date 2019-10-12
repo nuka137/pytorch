@@ -65,11 +65,16 @@ TEST_F(FunctionalTest, AvgPool3d) {
 }
 
 TEST_F(FunctionalTest, LPPool1d) {
+  int norm_type = 2;
+  int stride = 2;
+  int kernel_size = 3;
+
   auto x = torch::ones({1, 1, 5});
-  auto y = F::lp_pool1d(x, LPPool1dOptions(3).stride(2));
+  auto y = F::lp_pool1d(x, LPPool1dOptions(kernel_size).stride(stride).norm_type(norm_type));
+  auto expected = (torch::pow(torch::tensor({{{1, 1}}}, torch::kFloat), norm_type) * kernel_size).pow(1. / norm_type);
 
   ASSERT_EQ(y.ndimension(), 3);
-  ASSERT_TRUE(torch::allclose(y, torch::ones({1, 1, 2})));
+  ASSERT_TRUE(torch::allclose(y, expected));
   ASSERT_EQ(y.sizes(), torch::IntArrayRef({1, 1, 2}));
 }
 

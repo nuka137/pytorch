@@ -224,18 +224,12 @@ inline Tensor lp_pool1d(const Tensor& input, const LPPool1dOptions& options) {
   ExpandingArray<1> stride = options.stride();
   bool ceil_mode = options.ceil_mode();
 
-  if (stride != c10::nullopt) {
-    out = torch::avg_pool1d(input.pow(norm_type),
-                            AvePool1dOptions(kernel_size)
-                                       .stride(stride)
-                                       .ceil_mode(ceil_mode));
-  } else {
-    out = torch::avg_pool1d(input.pow(norm_type),
-                            AvePool1dOptions(kernel_size)
-                                       .ceil_mode(ceil_mode));
-  }
+  AvgPool1dOptions avg_pool_options(kernel_size);
+  avg_pool_options.ceil_mode(ceil_mode);
+  avg_pool_options.stride(stride);
+  out = avg_pool1d(input.pow(norm_type), avg_pool_options);
 
-  return (torch::sign(out) * torch::relu(torch::abs(out))).mul(kernel_size).pow(1. / norm_type);
+  return ((torch::sign(out) * torch::relu(torch::abs(out))) * (*kernel_size)[0]).pow(1. / norm_type);
 }
 
 } // namespace functional

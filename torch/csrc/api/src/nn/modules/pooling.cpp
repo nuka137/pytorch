@@ -199,14 +199,17 @@ template class MaxUnpoolImpl<3, MaxUnpool3dImpl>;
 
 // ============================================================================
 
-LPPool1dImpl::LPPool1dImpl(const LPPool1dOptions& options_)
+template <size_t D, typename Derived>
+LPPoolImpl<D, Derived>::LPPoolImpl(const LPPoolOptions<D>& options_)
     : options(options_) {}
 
-void LPPool1dImpl::reset() {}
+template <size_t D, typename Derived>
+void LPPoolImpl<D, Derived>::reset() {}
 
-void LPPool1dImpl::pretty_print(std::ostream& stream) const {
+template <size_t D, typename Derived>
+void LPPoolImpl<D, Derived>::pretty_print(std::ostream& stream) const {
   stream << std::boolalpha
-         << "torch::nn::LPPool1d("
+         << "torch::nn::LPPool" << D << "d("
          << "kernel_size=" << options.kernel_size() << ", "
          << "stride=" << options.stride() << ", "
          << "ceil_mode=" << options.ceil_mode() << ")";
@@ -215,6 +218,8 @@ void LPPool1dImpl::pretty_print(std::ostream& stream) const {
 Tensor LPPool1dImpl::forward(const Tensor& input) {
   return F::lp_pool1d(input, options);
 }
+
+template class LPPoolImpl<1, LPPool1dImpl>;
 
 } // namespace nn
 } // namespace torch
