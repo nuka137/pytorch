@@ -92,5 +92,34 @@ class TORCH_API Conv3dImpl : public ConvImpl<3, Conv3dImpl> {
 /// module storage semantics.
 TORCH_MODULE(Conv3d);
 
+
+/// Base class for all (dimension-specialized) convolution transpose modules.
+template <size_t D, typename Derived>
+class TORCH_API ConvTransposeImpl : public torch::nn::Cloneable<Derived> {
+ public:
+  ConvTransposeImpl(
+      int64_t input_channels,
+      int64_t output_channels,
+      ExpandingArray<D> kernel_size)
+      : ConvTransposeImpl(ConvTransposeOptions<D>(input_channels, output_channels, kernel_size)) {
+  }
+  explicit ConvTransposeImpl(const ConvTransposeOptions<D>& options_);
+
+  void reset() override;
+
+  /// Pretty prints the `ConvTranspose{1,2,3}d` module into the given `stream`.
+  void pretty_print(std::ostream& stream) const override;
+
+  /// The options with which this `Module` was constructed.
+  ConvTransposeOptions<D> options;
+
+  /// The learned kernel (or "weight").
+  Tensor weight;
+
+  /// The learned bias. Only defined if the `with_bias` option was true.
+  Tensor bias;
+};
+
+
 } // namespace nn
 } // namespace torch
