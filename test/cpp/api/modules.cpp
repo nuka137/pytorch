@@ -1731,6 +1731,12 @@ TEST_F(ModulesTest, PrettyPrintLPPool) {
   ASSERT_EQ(
       c10::str(LPPool1d(LPPool1dOptions(1, 2).stride(5).ceil_mode(true))),
       "torch::nn::LPPool1d(norm_type=1, kernel_size=2, stride=5, ceil_mode=true)");
+  ASSERT_EQ(
+      c10::str(LPPool2d(2, std::vector<int64_t>{1, 2}})),
+      "torch::nn::LPPool1d(norm_type=2, kernel_size=[1, 2], stride=5, ceil_mode=false)");
+  ASSERT_EQ(
+      c10::str(LPPool1d(LPPool1dOptions(1, std::vector<int64_t>{3, 4}).stride(5).ceil_mode(true))),
+      "torch::nn::LPPool1d(norm_type=1, kernel_size=[3, 4], stride=5, ceil_mode=true)");
 }
 
 TEST_F(ModulesTest, PrettyPrintAdaptiveMaxPool) {
