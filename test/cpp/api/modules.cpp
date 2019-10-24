@@ -1074,6 +1074,20 @@ TEST_F(ModulesTest, BatchNorm1dStateless) {
   ASSERT_FALSE(bn->bias.defined());
 }
 
+TEST_F(ModulesTest, BatchNorm1d) {
+  BatchNorm1d bn(BatchNorm1dOptions(5));
+  bn->eval();
+
+  auto input = torch::randn({2, 5});
+  auto output = bn->forward(input);
+  auto s = output.sum();
+
+  std::cout << s << std::endl;
+  s.backward();
+  
+  ASSERT_EQ(input.sizes(), input.grad().sizes());
+}
+
 TEST_F(ModulesTest, Linear_CUDA) {
   Linear model(5, 2);
   model->to(torch::kCUDA);
@@ -2046,7 +2060,7 @@ TEST_F(ModulesTest, PrettyPrintBatchNorm1d) {
       c10::str(BatchNorm1d(
           BatchNorm1dOptions(4).eps(0.5).momentum(0.1).affine(false)
           .track_running_stats(true))),
-      "torch::nn::BatchNorm1d(num_features=4, eps=0.5, momentum=0.1, affine=false, track_running_stats=true)");
+      "torch::nn::BatchNorm1d(eps=0.5, momentum=0.1, affine=false, track_running_stats=true)");
 }
 
 TEST_F(ModulesTest, PrettyPrintLayerNorm) {
