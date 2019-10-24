@@ -139,5 +139,16 @@ template class ConvImpl<1, Conv1dImpl>;
 template class ConvImpl<2, Conv2dImpl>;
 template class ConvImpl<3, Conv3dImpl>;
 
+template <size_t D, typename Derived>
+ConvTransposeImplBase<D, Derived>::ConvTransposeImplBase(const ConvTransposeOptionsBase<D>& options_)
+    : options(options_) {
+  if (options.input_channels() % options().groups() != 0) {
+    // TODO:
+  }
+  if (options.output_channels() % options().groups() != 0) {
+    // TODO:
+  }
+}
+
 } // namespace nn
 } // namespace torch

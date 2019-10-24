@@ -92,18 +92,19 @@ class TORCH_API Conv3dImpl : public ConvImpl<3, Conv3dImpl> {
 /// module storage semantics.
 TORCH_MODULE(Conv3d);
 
+// ~~~~~~~~~~~~~~~~~~~~~~~~~ ConvTranspose ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 /// Base class for all (dimension-specialized) convolution transpose modules.
 template <size_t D, typename Derived>
-class TORCH_API ConvTransposeImpl : public torch::nn::Cloneable<Derived> {
+class TORCH_API ConvTransposeImplBase : public torch::nn::Cloneable<Derived> {
  public:
-  ConvTransposeImpl(
+  ConvTransposeImplBase(
       int64_t input_channels,
       int64_t output_channels,
       ExpandingArray<D> kernel_size)
-      : ConvTransposeImpl(ConvTransposeOptions<D>(input_channels, output_channels, kernel_size)) {
+      : ConvTransposeImplBase(ConvTransposeOptionsBase<D>(input_channels, output_channels, kernel_size)) {
   }
-  explicit ConvTransposeImpl(const ConvTransposeOptions<D>& options_);
+  explicit ConvTransposeImplBase(const ConvTransposeOptionsBase<D>& options_);
 
   void reset() override;
 
@@ -120,6 +121,17 @@ class TORCH_API ConvTransposeImpl : public torch::nn::Cloneable<Derived> {
   Tensor bias;
 };
 
+/// Applies the ConvTranspose1d function.
+/// See https://pytorch.org/docs/master/nn.html#torch.nn.ConvTranspose1d to
+/// learn about the exact behavior of this module.
+class TORCH_API ConvTranspose1dImpl : public ConvTransposeImplBase<1, ConvTranspose1dImpl> {
+ public:
+  using ConvTransposeImplBase<1, ConvTranspose1dImpl>::ConvTransposeImplBase;
+
+  Tensor forward(const Tensor& input);
+};
+
+TORCH_MODULE(ConvTranspose1d);
 
 } // namespace nn
 } // namespace torch

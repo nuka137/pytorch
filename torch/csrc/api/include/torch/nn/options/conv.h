@@ -83,7 +83,7 @@ using Conv3dOptions = ConvOptions<3>;
 
 /// Options for a `D`-dimensional convolution module.
 template <size_t D>
-struct ConvTransposeOptions {
+struct ConvTransposeOptionsBase {
   /// The number of channels the input volumes will have.
   /// Changing this parameter after construction __has no effect__.
   TORCH_ARG(int64_t, input_channels);
@@ -135,14 +135,14 @@ struct ConvTransposeOptions {
   TORCH_ARG(std::string, padding_mode) = "zeros";
 };
  
-/// `ConvTransposeOptions` specialized for 1-D convolution.
-using ConvTranspose1dOptions = ConvTransposeOptions<1>;
+/// `ConvTransposeOptionsBase` specialized for 1-D convolution.
+using ConvTranspose1dOptions = ConvTransposeOptionsBase<1>;
 
-/// `ConvTransposeOptions` specialized for 2-D convolution.
-using ConvTranspose2dOptions = ConvTransposeOptions<2>;
+/// `ConvTransposeOptionsBase` specialized for 2-D convolution.
+using ConvTranspose2dOptions = ConvTransposeOptionsBase<2>;
 
-/// `ConvTransposeOptions` specialized for 3-D convolution.
-using ConvTranspose3dOptions = ConvTransposeOptions<3>;
+/// `ConvTransposeOptionsBase` specialized for 3-D convolution.
+using ConvTranspose3dOptions = ConvTransposeOptionsBase<3>;
 
 
 } // namespace nn
