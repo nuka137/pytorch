@@ -1078,14 +1078,14 @@ TEST_F(ModulesTest, BatchNorm1d) {
   BatchNorm1d bn(BatchNorm1dOptions(5));
   bn->eval();
 
-  auto input = torch::randn({2, 5});
+  auto input = torch::randn({2, 5}, torch::requires_grad());
   auto output = bn->forward(input);
   auto s = output.sum();
-
-  std::cout << s << std::endl;
   s.backward();
   
   ASSERT_EQ(input.sizes(), input.grad().sizes());
+  ASSERT_EQ(bn->running_mean.sizes(), bn->running_mean.grad().sizes());
+  ASSERT_EQ(bn->running_var.sizes(), bn->running_var.grad().sizes());
 }
 
 TEST_F(ModulesTest, Linear_CUDA) {
