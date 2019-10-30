@@ -142,12 +142,34 @@ template class ConvImpl<3, Conv3dImpl>;
 template <size_t D, typename Derived>
 ConvTransposeImplBase<D, Derived>::ConvTransposeImplBase(const ConvTransposeOptionsBase<D>& options_)
     : options(options_) {
-  if (options.input_channels() % options().groups() != 0) {
+  if (options.in_channels() % options().groups() != 0) {
     // TODO:
   }
-  if (options.output_channels() % options().groups() != 0) {
+  if (options.out_channels() % options().groups() != 0) {
     // TODO:
   }
+  in_channels = options.in_channels();
+  out_channels = options.out_channels();
+  kernel_size = options.kernel_size();
+  stride = options.stride();
+  padding = options.padding();
+  dilation = options.dilation();
+  transposed = // TODO:
+  output_padding = options.output_padding();
+  groups = options.groups();
+  padding_mode = options.padding_mode();
+
+  weight = 
+  if (options.bias()) {
+    bias 
+  } else {
+    this->register_parameter("bias", Tensor());
+  }
+}
+
+template <size_t D, typename Derived>
+ConvTransposeImplBase<D, Derived>::reset_parameters() {
+  // TODO
 }
 
 } // namespace nn

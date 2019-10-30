@@ -86,11 +86,11 @@ template <size_t D>
 struct ConvTransposeOptionsBase {
   /// The number of channels the input volumes will have.
   /// Changing this parameter after construction __has no effect__.
-  TORCH_ARG(int64_t, input_channels);
+  TORCH_ARG(int64_t, in_channels);
 
   /// The number of output channels the convolution should produce.
   /// Changing this parameter after construction __has no effect__.
-  TORCH_ARG(int64_t, output_channels);
+  TORCH_ARG(int64_t, out_channels);
 
   /// The kernel size to use.
   /// For a `D`-dim convolution, must be a single number or a list of `D`
