@@ -142,12 +142,11 @@ template class ConvImpl<3, Conv3dImpl>;
 template <size_t D, typename Derived>
 ConvTransposeImplBase<D, Derived>::ConvTransposeImplBase(const ConvTransposeOptionsBase<D>& options_)
     : options(options_) {
-  if (options.in_channels() % options().groups() != 0) {
-    // TODO:
-  }
-  if (options.out_channels() % options().groups() != 0) {
-    // TODO:
-  }
+  TORCH_CHECK(options.in_channels() % options().groups() != 0,
+              "in_channels must be divisible by groups");
+  TORCH_CHECK(options.out_channels() % options().groups() != 0,
+              "out_channels must be divisible by groups");
+
   in_channels = options.in_channels();
   out_channels = options.out_channels();
   kernel_size = options.kernel_size();
@@ -159,7 +158,7 @@ ConvTransposeImplBase<D, Derived>::ConvTransposeImplBase(const ConvTransposeOpti
   groups = options.groups();
   padding_mode = options.padding_mode();
 
-  weight = 
+  weight = torch::tensor(
   if (options.bias()) {
     bias 
   } else {
@@ -169,7 +168,12 @@ ConvTransposeImplBase<D, Derived>::ConvTransposeImplBase(const ConvTransposeOpti
 
 template <size_t D, typename Derived>
 ConvTransposeImplBase<D, Derived>::reset_parameters() {
-  // TODO
+  torch::nn::init::kaiming_uniform_(weight, std::sqrt(5));
+  if (bias.defined()) {
+    auto fan_in = torch::nn::_calculate_fan_in_and_fan_out(weight)[0];
+    double bound = 1 / std::sqrt(fan_in);
+    torch::nn::init::uniform_(bias, -bound, bound);
+  }
 }
 
 } // namespace nn
