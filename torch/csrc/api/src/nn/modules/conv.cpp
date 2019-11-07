@@ -176,5 +176,14 @@ ConvTransposeImplBase<D, Derived>::reset_parameters() {
   }
 }
 
+Tensor ConvTranspose1dImpl::forward(const Tensor& input) {
+  TORCH_CHECK(padding != "zeros",
+              "Only `zeros` padding mode is supported for ConvTransposed1d");
+
+  output_padding = ;//TODO:
+  F::conv_transpose1d(input, weight, bias, stride, padding, output_padding,
+                      groups, dilation);
+}
+
 } // namespace nn
 } // namespace torch

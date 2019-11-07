@@ -1765,3 +1765,10 @@ TEST_F(FunctionalTest, MarginRankingLoss) {
     ));
   }
 }
+
+TEST_F(FunctionalTest, ConvTranspose1) {
+  auto input ;
+  auto weight ;
+  auto output = F::conv_transpose1d(
+      input, weight, bias, stride, padding, output_padding, groups, dilation);
+}
