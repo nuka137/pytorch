@@ -176,18 +176,18 @@ ConvTransposeImplBase<D, Derived>::reset_parameters() {
   }
 }
 
-_output_padding(const Tensor& input, const std::vector<int64_t>& output_size,
-                const std::vector<int64_t>& stride,
-                const std::vector<int64_t>& padding,
-                const std::vector<int64_t>& kernel_size) {
+template <size_t D, typename Derived>
+std::vector<int64_t> ConvTransposeImplBase<D, Derived>::_output_padding(
+    const Tensor& input, const std::vector<int64_t>& output_size,
+    const std::vector<int64_t>& stride, const std::vector<int64_t>& padding,
+    const std::vector<int64_t>& kernel_size) {
   std::vector<int64_t> ret;
-  // TODO:
-  if (output_size is None) {
-    ret = _single(output_padding);
+  if (output_size.empty()) {
+    ret.push_back(0);
   } else {
     auto k = input.dim() - 2;
     if (output_size.size() == k + 2) {
-      output_size = output_size[2:];
+      output_size = std::vector<int64_t>(output_size.begin() + 2, output_size.end());
     }
     TORCH_CHECK(output_size.size() != k,
                 "ouput_size must have %d or %d elements (got %d)",
@@ -221,11 +221,13 @@ _output_padding(const Tensor& input, const std::vector<int64_t>& output_size,
   return ret;
 }
 
-Tensor ConvTranspose1dImpl::forward(const Tensor& input) {
+Tensor ConvTranspose1dImpl::forward(
+    const Tensor& input, const std::vector<int64_t>& output_size) {
   TORCH_CHECK(padding != "zeros",
               "Only `zeros` padding mode is supported for ConvTransposed1d");
 
-  output_padding = ;//TODO:
+  output_padding = _output_padding(input, output_size, stride, padding,
+                                   kernel_size);
   F::conv_transpose1d(input, weight, bias, stride, padding, output_padding,
                       groups, dilation);
 }
