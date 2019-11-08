@@ -176,6 +176,51 @@ ConvTransposeImplBase<D, Derived>::reset_parameters() {
   }
 }
 
+_output_padding(const Tensor& input, const std::vector<int64_t>& output_size,
+                const std::vector<int64_t>& stride,
+                const std::vector<int64_t>& padding,
+                const std::vector<int64_t>& kernel_size) {
+  std::vector<int64_t> ret;
+  // TODO:
+  if (output_size is None) {
+    ret = _single(output_padding);
+  } else {
+    auto k = input.dim() - 2;
+    if (output_size.size() == k + 2) {
+      output_size = output_size[2:];
+    }
+    TORCH_CHECK(output_size.size() != k,
+                "ouput_size must have %d or %d elements (got %d)",
+                k, k + 2, output_size.size());
+
+    std::vector<int64_t> min_sizes;
+    std::vector<int64_t> max_sizes;
+    for (int d = 0; d < k; d++) {
+      int64_t dim_size = ((input.size(d + 2) - 1) * stride[d] - 2 * padding[d] + kernel_size[d]);
+      min_sizes.push_back(dim_size);
+      max_sizes.push_back(min_sizes[d] + stride[d] - 1);
+    }
+
+    for (int i = 0; i < output_size.size(); i++) {
+      int64_t size = output_size[i];
+      int64_t min_size = min_sizes[i];
+      int64_t max_size = max_sizes[i];
+      TORCH_CHECK((size < min_size) || (size > max_size),
+                  "requested an output size of %d, but valid sizes range "
+                  "from %d to %d (for an input of %d)",
+                  output_size, min_sizes, max_sizes, input.size()[2:]);
+    }
+
+    std::vector<int64_t> res;
+    for (int d = 0; d < res.size(); d++) {
+      res.push_back(output_size[d] - min_sizes[d]);
+    }
+    ret = res;
+  }
+
+  return ret;
+}
+
 Tensor ConvTranspose1dImpl::forward(const Tensor& input) {
   TORCH_CHECK(padding != "zeros",
               "Only `zeros` padding mode is supported for ConvTransposed1d");

@@ -1766,9 +1766,18 @@ TEST_F(FunctionalTest, MarginRankingLoss) {
   }
 }
 
-TEST_F(FunctionalTest, ConvTranspose1) {
-  auto input ;
-  auto weight ;
+TEST_F(FunctionalTest, ConvTranspose1d) {
+  auto input = torch::ones({5, 5, 5});
+  auto weight = torch::ones({3, 2});
+  auto bias = torch::ones({3, 2});
+  std::vector<int64_t> stride({1});
+  std::vector<int64_t> padding({1});
+  std::vector<int64_t> output_padding({1});
+  int groups = 1;
+  std::vector<int64_t> dilation({1});
   auto output = F::conv_transpose1d(
       input, weight, bias, stride, padding, output_padding, groups, dilation);
+
+  int64_t expected_lout_size = (input.sizes[2] - 1) * stride[0] - 2 * padding[0] + dilation[0] * (weight.sizes()[0] - 1) + output_padding[0] + 1;
+  ASSERT_EQ(input.sizes(), std::vector<int64_t>({5, 5, expected_lout_size});
 }
