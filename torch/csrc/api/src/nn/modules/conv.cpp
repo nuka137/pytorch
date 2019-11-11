@@ -169,7 +169,7 @@ template <size_t D, typename Derived>
 void ConvTransposeImplBase<D, Derived>::reset_parameters() {
   torch::nn::init::kaiming_uniform_(weight, std::sqrt(5));
   if (bias.defined()) {
-    auto fan_in = torch::nn::init::_calculate_fan_in_and_fan_out(weight)[0];
+    auto fan_in = std::get<0>(torch::nn::init::_calculate_fan_in_and_fan_out(weight));
     double bound = 1 / std::sqrt(fan_in);
     torch::nn::init::uniform_(bias, -bound, bound);
   }
@@ -193,8 +193,8 @@ std::string vector_to_string(const std::vector<int64_t>& vec) {
 template <size_t D, typename Derived>
 std::vector<int64_t> ConvTransposeImplBase<D, Derived>::_output_padding(
     const Tensor& input, const std::vector<int64_t>& output_size,
-    const std::vector<int64_t>& stride, const std::vector<int64_t>& padding,
-    const std::vector<int64_t>& kernel_size) {
+    const ExpandingArray<D>& stride, const ExpandingArray<D>& padding,
+    const ExpandingArray<D>& kernel_size) {
   std::vector<int64_t> ret;
   if (output_size.empty()) {
     ret.push_back(0);
@@ -212,9 +212,9 @@ std::vector<int64_t> ConvTransposeImplBase<D, Derived>::_output_padding(
     std::vector<int64_t> min_sizes;
     std::vector<int64_t> max_sizes;
     for (int d = 0; d < k; d++) {
-      int64_t dim_size = ((input.size(d + 2) - 1) * stride[d] - 2 * padding[d] + kernel_size[d]);
+      int64_t dim_size = ((input.size(d + 2) - 1) * (*stride)[d] - 2 * (*padding)[d] + (*kernel_size)[d]);
       min_sizes.push_back(dim_size);
-      max_sizes.push_back(min_sizes[d] + stride[d] - 1);
+      max_sizes.push_back(min_sizes[d] + (*stride)[d] - 1);
     }
 
     for (int i = 0; i < output_size_tmp.size(); i++) {
@@ -242,7 +242,7 @@ std::vector<int64_t> ConvTransposeImplBase<D, Derived>::_output_padding(
 
 Tensor ConvTranspose1dImpl::forward(
     const Tensor& input, const std::vector<int64_t>& output_size) {
-  TORCH_CHECK(options.padding != std::string("zeros"),
+  TORCH_CHECK(options.padding_mode() != std::string("zeros"),
               "Only `zeros` padding mode is supported for ConvTransposed1d");
 
   std::vector<int64_t> output_padding = this->_output_padding(
