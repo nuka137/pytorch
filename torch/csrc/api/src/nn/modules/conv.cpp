@@ -222,8 +222,8 @@ std::vector<int64_t> ConvTransposeImplBase<D, Derived>::_output_padding(
       int64_t min_size = min_sizes[i];
       int64_t max_size = max_sizes[i];
       TORCH_CHECK((size < min_size) || (size > max_size),
-                  "requested an output size of %d, but valid sizes range "
-                  "from %d to %d (for an input of %d)",
+                  "requested an output size of %s, but valid sizes range "
+                  "from %s to %s (for an input of %s)",
                   vector_to_string(output_size_tmp),
                   vector_to_string(min_sizes),
                   vector_to_string(max_sizes),
