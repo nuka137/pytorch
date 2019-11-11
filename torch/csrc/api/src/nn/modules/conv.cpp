@@ -1,4 +1,6 @@
 #include <torch/nn/modules/conv.h>
+#include <torch/nn/functional/conv.h>
+#include <torch/nn/init.h>
 
 #include <torch/expanding_array.h>
 #include <torch/types.h>
@@ -9,6 +11,8 @@
 #include <functional>
 #include <utility>
 #include <vector>
+
+namespace F = torch::nn::functional;
 
 namespace torch {
 namespace nn {
@@ -147,33 +151,43 @@ ConvTransposeImplBase<D, Derived>::ConvTransposeImplBase(const ConvTransposeOpti
   TORCH_CHECK(options.out_channels() % options().groups() != 0,
               "out_channels must be divisible by groups");
 
-  in_channels = options.in_channels();
-  out_channels = options.out_channels();
-  kernel_size = options.kernel_size();
-  stride = options.stride();
-  padding = options.padding();
-  dilation = options.dilation();
-  transposed = // TODO:
-  output_padding = options.output_padding();
-  groups = options.groups();
-  padding_mode = options.padding_mode();
-
-  weight = torch::tensor(
+  std::vector<int64_t> dims = {
+    options.in_channels(), options.out_channels() / options.groups()
+  };
+  for (auto& d : options.kernel_size()) {
+    dims.push_back(d);
+  }
+  weight = this->register_parameter("weight", torch::tensor(dims));
   if (options.bias()) {
-    bias 
+    this->register_parameter("bias", torch::tensor({options.out_channels()}));
   } else {
     this->register_parameter("bias", Tensor());
   }
 }
 
 template <size_t D, typename Derived>
-ConvTransposeImplBase<D, Derived>::reset_parameters() {
+void ConvTransposeImplBase<D, Derived>::reset_parameters() {
   torch::nn::init::kaiming_uniform_(weight, std::sqrt(5));
   if (bias.defined()) {
-    auto fan_in = torch::nn::_calculate_fan_in_and_fan_out(weight)[0];
+    auto fan_in = torch::nn::init::_calculate_fan_in_and_fan_out(weight)[0];
     double bound = 1 / std::sqrt(fan_in);
     torch::nn::init::uniform_(bias, -bound, bound);
   }
+}
+
+std::string vector_to_string(const std::vector<int64_t>& vec) {
+  if (vec.size() == 0) {
+    return "[]";
+  }
+
+  std::stringstream ss;
+  ss << "[";
+  for (int i = 0; i < vec.size() - 1; i++) {
+    ss << vec[i] << ",";
+  }
+  ss << vec[vec.size() - 1] << "]";
+
+  return ss.str();
 }
 
 template <size_t D, typename Derived>
@@ -186,12 +200,14 @@ std::vector<int64_t> ConvTransposeImplBase<D, Derived>::_output_padding(
     ret.push_back(0);
   } else {
     auto k = input.dim() - 2;
+    std::vector<int64_t> output_size_tmp = output_size;
     if (output_size.size() == k + 2) {
-      output_size = std::vector<int64_t>(output_size.begin() + 2, output_size.end());
+      output_size_tmp = std::vector<int64_t>(output_size.begin() + 2,
+                                             output_size.end());
     }
-    TORCH_CHECK(output_size.size() != k,
+    TORCH_CHECK(output_size_tmp.size() != k,
                 "ouput_size must have %d or %d elements (got %d)",
-                k, k + 2, output_size.size());
+                k, k + 2, output_size_tmp.size());
 
     std::vector<int64_t> min_sizes;
     std::vector<int64_t> max_sizes;
@@ -201,19 +217,22 @@ std::vector<int64_t> ConvTransposeImplBase<D, Derived>::_output_padding(
       max_sizes.push_back(min_sizes[d] + stride[d] - 1);
     }
 
-    for (int i = 0; i < output_size.size(); i++) {
-      int64_t size = output_size[i];
+    for (int i = 0; i < output_size_tmp.size(); i++) {
+      int64_t size = output_size_tmp[i];
       int64_t min_size = min_sizes[i];
       int64_t max_size = max_sizes[i];
       TORCH_CHECK((size < min_size) || (size > max_size),
                   "requested an output size of %d, but valid sizes range "
                   "from %d to %d (for an input of %d)",
-                  output_size, min_sizes, max_sizes, input.size()[2:]);
+                  vector_to_string(output_size_tmp),
+                  vector_to_string(min_sizes),
+                  vector_to_string(max_sizes),
+                  vector_to_string(std::vector<int64_t>(input.sizes().begin() + 2, input.sizes().end())));
     }
 
     std::vector<int64_t> res;
     for (int d = 0; d < res.size(); d++) {
-      res.push_back(output_size[d] - min_sizes[d]);
+      res.push_back(output_size_tmp[d] - min_sizes[d]);
     }
     ret = res;
   }
@@ -223,13 +242,13 @@ std::vector<int64_t> ConvTransposeImplBase<D, Derived>::_output_padding(
 
 Tensor ConvTranspose1dImpl::forward(
     const Tensor& input, const std::vector<int64_t>& output_size) {
-  TORCH_CHECK(padding != "zeros",
+  TORCH_CHECK(options.padding != std::string("zeros"),
               "Only `zeros` padding mode is supported for ConvTransposed1d");
 
-  output_padding = _output_padding(input, output_size, stride, padding,
-                                   kernel_size);
-  F::conv_transpose1d(input, weight, bias, stride, padding, output_padding,
-                      groups, dilation);
+  std::vector<int64_t> output_padding = this->_output_padding(
+      input, output_size, options.stride(), options.padding(), options.kernel_size());
+  F::conv_transpose1d(input, weight, bias, options.stride(), options.padding(), output_padding,
+                      options.groups(), options.dilation());
 }
 
 } // namespace nn

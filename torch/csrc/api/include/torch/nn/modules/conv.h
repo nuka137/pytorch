@@ -97,11 +97,13 @@ TORCH_MODULE(Conv3d);
 /// Base class for all (dimension-specialized) convolution transpose modules.
 template <size_t D, typename Derived>
 class TORCH_API ConvTransposeImplBase : public torch::nn::Cloneable<Derived> {
- private:
+ protected:
   std::vector<int64_t> _output_padding(
       const Tensor& input, const std::vector<int64_t>& output_size,
       const std::vector<int64_t>& stride, const std::vector<int64_t>& padding,
       const std::vector<int64_t>& kernel_size);
+
+  void reset_parameters();
 
  public:
   ConvTransposeImplBase(
@@ -118,7 +120,7 @@ class TORCH_API ConvTransposeImplBase : public torch::nn::Cloneable<Derived> {
   void pretty_print(std::ostream& stream) const override;
 
   /// The options with which this `Module` was constructed.
-  ConvTransposeOptions<D> options;
+  ConvTransposeOptionsBase<D> options;
 
   /// The learned kernel (or "weight").
   Tensor weight;

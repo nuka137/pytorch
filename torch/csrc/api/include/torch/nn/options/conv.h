@@ -96,7 +96,7 @@ struct ConvTransposeOptionsBase {
   /// For a `D`-dim convolution, must be a single number or a list of `D`
   /// numbers.
   /// This parameter __can__ be changed after construction.
-  TORCH_ARG(ExpandingArray<D>, kernel_size);
+  TORCH_ARG(ExpandingArray<D>, kernel_size) = 1;
 
   /// The stride of the convolution.
   /// For a `D`-dim convolution, must be a single number or a list of `D`
