@@ -1767,20 +1767,27 @@ TEST_F(FunctionalTest, MarginRankingLoss) {
 }
 
 TEST_F(FunctionalTest, ConvTranspose1d) {
-  auto input = torch::ones({5, 5, 6});
-  auto weight = torch::ones({5, 5, 2});
-  auto bias = torch::ones({5});
+  int64_t batch_size = 5;
+  int64_t in_channels = 5;
+  int64_t out_channels = 5;
+  int64_t kernel_size = 2;
+  int groups = 1;
+  int64_t l_in_size = 6;
   std::vector<int64_t> stride({1});
   std::vector<int64_t> padding({1});
   std::vector<int64_t> output_padding({0});
-  int groups = 1;
   std::vector<int64_t> dilation({1});
+
+  auto input = torch::ones({batch_size, in_channels, l_in_size});
+  auto weight = torch::ones({batch_size, out_channels / groups, kernel_size});
+  auto bias = torch::ones({out_channels});
+
   auto output = F::conv_transpose1d(
       input, weight, bias, stride, padding, output_padding, groups, dilation);
   std::cout << "=====" << std::endl;
   std::cout << output << std::endl;
   std::cout << "=====" << std::endl;
 
-  int64_t expected_lout_size = (input.sizes()[2] - 1) * stride[0] - 2 * padding[0] + dilation[0] * (weight.sizes()[2] - 1) + output_padding[0] + 1;
-  ASSERT_EQ(input.sizes(), std::vector<int64_t>({5, 5, expected_lout_size}));
+  int64_t l_out_size = (l_in_size - 1) * stride[0] - 2 * padding[0] + dilation[0] * (kernel_size - 1) + output_padding[0] + 1;
+  ASSERT_EQ(output.sizes(), std::vector<int64_t>({batch_size, out_channels, l_out_size}));
 }
