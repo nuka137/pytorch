@@ -2568,8 +2568,8 @@ TEST_F(ModulesTest, PrettyPrintConv) {
 
 TEST_F(ModulesTest, PrettyPrintConvTranspose) {
   ASSERT_EQ(
-      c10::str(ConvTranspose1d(3, 4, {5})),
-      "torch::nn::ConvTranspose1d(input_channels=3, output_channels=4, kernel_size=[5], stride=1)");
+      c10::str(ConvTranspose1d(3, 4, std::vector<int64_t>{5})),
+      "torch::nn::ConvTranspose1d(input_channels=3, output_channels=4, kernel_size=5, stride=1, padding=0, output_padding=0, groups=1, bias=true, dilation=1, padding_mode=\"zeros\")");
 };
 
 TEST_F(ModulesTest, PrettyPrintUpsample) {

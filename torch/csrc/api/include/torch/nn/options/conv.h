@@ -84,6 +84,14 @@ using Conv3dOptions = ConvOptions<3>;
 /// Options for a `D`-dimensional convolution module.
 template <size_t D>
 struct ConvTransposeOptionsBase {
+  ConvTransposeOptionsBase(
+      int64_t in_channels,
+      int64_t out_channels,
+      ExpandingArray<D> kernel_size) :
+                in_channels_(in_channels),
+                out_channels_(out_channels),
+                kernel_size_(std::move(kernel_size)) {}
+
   /// The number of channels the input volumes will have.
   /// Changing this parameter after construction __has no effect__.
   TORCH_ARG(int64_t, in_channels);
