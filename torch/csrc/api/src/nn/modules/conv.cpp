@@ -144,25 +144,27 @@ template class ConvImpl<2, Conv2dImpl>;
 template class ConvImpl<3, Conv3dImpl>;
 
 template <size_t D, typename Derived>
-ConvTransposeImplBase<D, Derived>::ConvTransposeImplBase(const ConvTransposeOptionsBase<D>& options_)
+ConvTransposeImplBase<D, Derived>::ConvTransposeImplBase(
+    const ConvTransposeOptionsBase<D>& options_)
     : options(options_) {
-  TORCH_CHECK(options.in_channels() % options().groups() != 0,
+  TORCH_CHECK((options.in_channels() % options.groups()) == 0,
               "in_channels must be divisible by groups");
-  TORCH_CHECK(options.out_channels() % options().groups() != 0,
+  TORCH_CHECK((options.out_channels() % options.groups()) == 0,
               "out_channels must be divisible by groups");
 
   std::vector<int64_t> dims = {
     options.in_channels(), options.out_channels() / options.groups()
   };
-  for (auto& d : options.kernel_size()) {
+  for (auto& d : *(options.kernel_size())) {
     dims.push_back(d);
   }
-  weight = this->register_parameter("weight", torch::tensor(dims));
+  weight = this->register_parameter("weight", torch::empty(dims));
   if (options.bias()) {
-    this->register_parameter("bias", torch::tensor({options.out_channels()}));
+    this->register_parameter("bias", torch::empty({options.out_channels()}));
   } else {
     this->register_parameter("bias", Tensor());
   }
+  this->reset_parameters();
 }
 
 template <size_t D, typename Derived>
@@ -176,10 +178,16 @@ void ConvTransposeImplBase<D, Derived>::reset_parameters() {
 }
 
 template <size_t D, typename Derived>
+void ConvTransposeImplBase<D, Derived>::reset() {
+  this->reset_parameters();
+}
+
+template <size_t D, typename Derived>
 void ConvTransposeImplBase<D, Derived>::pretty_print(std::ostream& stream) const {
-  stream << "torch::nn::ConvTranspose" << D << "d"
-         << "(input_channels=" << options.input_channels()
-         << ", output_channels=" << options.output_channels()
+  stream << std::boolalpha
+         << "torch::nn::ConvTranspose" << D << "d"
+         << "(input_channels=" << options.in_channels()
+         << ", output_channels=" << options.out_channels()
          << ", kernel_size=" << options.kernel_size()
          << ", stride=" << options.stride()
          << ", padding=" << options.padding()
@@ -187,7 +195,7 @@ void ConvTransposeImplBase<D, Derived>::pretty_print(std::ostream& stream) const
          << ", groups=" << options.groups()
          << ", bias=" << options.bias()
          << ", dilation=" << options.dilation()
-         << ", padding_mode=" << ")";
+         << ", padding_mode=" << options.padding_mode() << ")";
 }
 
 std::string vector_to_string(const std::vector<int64_t>& vec) {
@@ -236,6 +244,14 @@ std::vector<int64_t> ConvTransposeImplBase<D, Derived>::_output_padding(
       int64_t size = output_size_tmp[i];
       int64_t min_size = min_sizes[i];
       int64_t max_size = max_sizes[i];
+      std::stringstream ss;
+      TORCH_CHECK((size < min_size) || (size > max_size),
+                  "requested an output size of [%s], but valid sizes range "
+                  "from [%s] to [%s] (for an input of [%s])",
+                  c10::Join(",", output_size_tmp), c10::Join(",", min_sizes),
+                  c10::Join(",", max_sizes),
+                  c10::Join(",", std::vector<int64_t>(input.sizes().begin() + 2, input.sizes().end())));
+      /*
       TORCH_CHECK((size < min_size) || (size > max_size),
                   "requested an output size of %s, but valid sizes range "
                   "from %s to %s (for an input of %s)",
@@ -243,6 +259,7 @@ std::vector<int64_t> ConvTransposeImplBase<D, Derived>::_output_padding(
                   vector_to_string(min_sizes),
                   vector_to_string(max_sizes),
                   vector_to_string(std::vector<int64_t>(input.sizes().begin() + 2, input.sizes().end())));
+                  */
     }
 
     std::vector<int64_t> res;
@@ -265,6 +282,8 @@ Tensor ConvTranspose1dImpl::forward(
   F::conv_transpose1d(input, weight, bias, options.stride(), options.padding(), output_padding,
                       options.groups(), options.dilation());
 }
+
+template class ConvTransposeImplBase<1, ConvTranspose1dImpl>;
 
 } // namespace nn
 } // namespace torch
