@@ -98,7 +98,7 @@ TORCH_MODULE(Conv3d);
 template <size_t D, typename Derived>
 class TORCH_API ConvTransposeImplBase : public torch::nn::Cloneable<Derived> {
  protected:
-  std::vector<int64_t> _output_padding(
+  ExpandingArray<D> _output_padding(
       const Tensor& input, const std::vector<int64_t>& output_size,
       const ExpandingArray<D>& stride, const ExpandingArray<D>& padding,
       const ExpandingArray<D>& kernel_size);

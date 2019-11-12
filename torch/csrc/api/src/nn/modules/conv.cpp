@@ -160,9 +160,9 @@ ConvTransposeImplBase<D, Derived>::ConvTransposeImplBase(
   }
   weight = this->register_parameter("weight", torch::empty(dims));
   if (options.bias()) {
-    this->register_parameter("bias", torch::empty({options.out_channels()}));
+    bias = this->register_parameter("bias", torch::empty({options.out_channels()}));
   } else {
-    this->register_parameter("bias", Tensor());
+    bias = this->register_parameter("bias", Tensor());
   }
   this->reset_parameters();
 }
@@ -198,23 +198,8 @@ void ConvTransposeImplBase<D, Derived>::pretty_print(std::ostream& stream) const
          << ", padding_mode=" << options.padding_mode() << ")";
 }
 
-std::string vector_to_string(const std::vector<int64_t>& vec) {
-  if (vec.size() == 0) {
-    return "[]";
-  }
-
-  std::stringstream ss;
-  ss << "[";
-  for (int i = 0; i < vec.size() - 1; i++) {
-    ss << vec[i] << ",";
-  }
-  ss << vec[vec.size() - 1] << "]";
-
-  return ss.str();
-}
-
 template <size_t D, typename Derived>
-std::vector<int64_t> ConvTransposeImplBase<D, Derived>::_output_padding(
+ExpandingArray<D> ConvTransposeImplBase<D, Derived>::_output_padding(
     const Tensor& input, const std::vector<int64_t>& output_size,
     const ExpandingArray<D>& stride, const ExpandingArray<D>& padding,
     const ExpandingArray<D>& kernel_size) {
@@ -251,15 +236,6 @@ std::vector<int64_t> ConvTransposeImplBase<D, Derived>::_output_padding(
                   c10::Join(",", output_size_tmp), c10::Join(",", min_sizes),
                   c10::Join(",", max_sizes),
                   c10::Join(",", std::vector<int64_t>(input.sizes().begin() + 2, input.sizes().end())));
-      /*
-      TORCH_CHECK((size < min_size) || (size > max_size),
-                  "requested an output size of %s, but valid sizes range "
-                  "from %s to %s (for an input of %s)",
-                  vector_to_string(output_size_tmp),
-                  vector_to_string(min_sizes),
-                  vector_to_string(max_sizes),
-                  vector_to_string(std::vector<int64_t>(input.sizes().begin() + 2, input.sizes().end())));
-                  */
     }
 
     std::vector<int64_t> res;
@@ -269,16 +245,20 @@ std::vector<int64_t> ConvTransposeImplBase<D, Derived>::_output_padding(
     ret = res;
   }
 
-  return ret;
+  return ExpandingArray<D>(ret);
 }
 
 Tensor ConvTranspose1dImpl::forward(
     const Tensor& input, const std::vector<int64_t>& output_size) {
-  TORCH_CHECK(options.padding_mode() != std::string("zeros"),
+  TORCH_CHECK(options.padding_mode() == std::string("zeros"),
               "Only `zeros` padding mode is supported for ConvTransposed1d");
 
-  std::vector<int64_t> output_padding = this->_output_padding(
+  ExpandingArray<1> output_padding = this->_output_padding(
       input, output_size, options.stride(), options.padding(), options.kernel_size());
+  std::cout << "===weight===" << std::endl;
+  std::cout << weight << std::endl;
+  std::cout << "===bias===" << std::endl;
+  std::cout << bias << std::endl;
   F::conv_transpose1d(input, weight, bias, options.stride(), options.padding(), output_padding,
                       options.groups(), options.dilation());
 }

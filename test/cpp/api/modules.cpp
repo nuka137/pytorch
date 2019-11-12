@@ -95,6 +95,15 @@ TEST_F(ModulesTest, Conv3d) {
   ASSERT_TRUE(model->weight.grad().numel() == 3 * 2 * 3 * 3 * 3);
 }
 
+TEST_F(ModulesTest, ConvTranspose1d) {
+  ConvTranspose1d model(ConvTranspose1dOptions(1, 1, 8).stride(4).bias(true));
+  auto x = torch::randn({1, 1, 2}, torch::requires_grad());
+  auto y = model(x);
+
+  ASSERT_EQ(y.ndimension(), 3);
+  ASSERT_EQ(y.sizes(), std::vector<int64_t>({2, 3, 5}));
+}
+
 TEST_F(ModulesTest, MaxPool1d) {
   MaxPool1d model(MaxPool1dOptions(3).stride(2));
   auto x = torch::ones({1, 1, 5}, torch::requires_grad());
