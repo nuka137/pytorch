@@ -175,6 +175,21 @@ void ConvTransposeImplBase<D, Derived>::reset_parameters() {
   }
 }
 
+template <size_t D, typename Derived>
+void ConvTransposeImplBase<D, Derived>::pretty_print(std::ostream& stream) const {
+  stream << "torch::nn::ConvTranspose" << D << "d"
+         << "(input_channels=" << options.input_channels()
+         << ", output_channels=" << options.output_channels()
+         << ", kernel_size=" << options.kernel_size()
+         << ", stride=" << options.stride()
+         << ", padding=" << options.padding()
+         << ", output_padding=" << options.output_padding()
+         << ", groups=" << options.groups()
+         << ", bias=" << options.bias()
+         << ", dilation=" << options.dilation()
+         << ", padding_mode=" << ")";
+}
+
 std::string vector_to_string(const std::vector<int64_t>& vec) {
   if (vec.size() == 0) {
     return "[]";

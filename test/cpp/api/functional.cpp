@@ -1789,6 +1789,5 @@ TEST_F(FunctionalTest, ConvTranspose1d) {
   ASSERT_TRUE(torch::allclose(output, torch::tensor({{{
     2.f,  2.f,  2.f,  2.f,  3.f,  3.f,  3.f,  3.f,  2.f,  2.f,  2.f,  2.f
   }}})));
-     
 }
 

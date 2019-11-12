@@ -2566,6 +2566,12 @@ TEST_F(ModulesTest, PrettyPrintConv) {
       "torch::nn::Conv2d(input_channels=3, output_channels=4, kernel_size=[5, 6], stride=[1, 2])");
 }
 
+TEST_F(ModulesTest, PrettyPrintConvTranspose) {
+  ASSERT_EQ(
+      c10::str(ConvTranspose1d(3, 4, {5})),
+      "torch::nn::ConvTranspose1d(input_channels=3, output_channels=4, kernel_size=[5], stride=1)");
+};
+
 TEST_F(ModulesTest, PrettyPrintUpsample) {
   ASSERT_EQ(
       c10::str(Upsample(UpsampleOptions().size({2, 4, 4}))),
