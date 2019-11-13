@@ -229,7 +229,6 @@ ExpandingArray<D> ConvTransposeImplBase<D, Derived>::_output_padding(
       int64_t size = output_size_tmp[i];
       int64_t min_size = min_sizes[i];
       int64_t max_size = max_sizes[i];
-      std::stringstream ss;
       TORCH_CHECK((size < min_size) || (size > max_size),
                   "requested an output size of [%s], but valid sizes range "
                   "from [%s] to [%s] (for an input of [%s])",
@@ -254,13 +253,11 @@ Tensor ConvTranspose1dImpl::forward(
               "Only `zeros` padding mode is supported for ConvTransposed1d");
 
   ExpandingArray<1> output_padding = this->_output_padding(
-      input, output_size, options.stride(), options.padding(), options.kernel_size());
-  std::cout << "===weight===" << std::endl;
-  std::cout << weight << std::endl;
-  std::cout << "===bias===" << std::endl;
-  std::cout << bias << std::endl;
-  F::conv_transpose1d(input, weight, bias, options.stride(), options.padding(), output_padding,
-                      options.groups(), options.dilation());
+      input, output_size, options.stride(), options.padding(),
+      options.kernel_size());
+  return F::conv_transpose1d(input, weight, bias, options.stride(),
+                             options.padding(), output_padding,
+                             options.groups(), options.dilation());
 }
 
 template class ConvTransposeImplBase<1, ConvTranspose1dImpl>;

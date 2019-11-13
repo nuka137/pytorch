@@ -146,12 +146,5 @@ struct ConvTransposeOptionsBase {
 /// `ConvTransposeOptionsBase` specialized for 1-D convolution.
 using ConvTranspose1dOptions = ConvTransposeOptionsBase<1>;
 
-/// `ConvTransposeOptionsBase` specialized for 2-D convolution.
-using ConvTranspose2dOptions = ConvTransposeOptionsBase<2>;
-
-/// `ConvTransposeOptionsBase` specialized for 3-D convolution.
-using ConvTranspose3dOptions = ConvTransposeOptionsBase<3>;
-
-
 } // namespace nn
 } // namespace torch
