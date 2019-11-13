@@ -8,8 +8,6 @@ template struct ConvOptions<2>;
 template struct ConvOptions<3>;
 
 template struct ConvTransposeOptionsBase<1>;
-template struct ConvTransposeOptionsBase<2>;
-template struct ConvTransposeOptionsBase<3>;
 
 } // namespace nn
 } // namespace torch

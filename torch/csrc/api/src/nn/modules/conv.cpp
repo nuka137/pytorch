@@ -208,14 +208,14 @@ ExpandingArray<D> ConvTransposeImplBase<D, Derived>::_output_padding(
     ret.push_back(0);
   } else {
     auto k = input.dim() - 2;
-    std::vector<int64_t> output_size_tmp = output_size;
+    std::vector<int64_t> output_size_resized = output_size;
     if (output_size.size() == k + 2) {
-      output_size_tmp = std::vector<int64_t>(output_size.begin() + 2,
-                                             output_size.end());
+      output_size_resized = std::vector<int64_t>(output_size.begin() + 2,
+                                                 output_size.end());
     }
-    TORCH_CHECK(output_size_tmp.size() != k,
+    TORCH_CHECK(output_size_resized.size() != k,
                 "ouput_size must have %d or %d elements (got %d)",
-                k, k + 2, output_size_tmp.size());
+                k, k + 2, output_size_resized.size());
 
     std::vector<int64_t> min_sizes;
     std::vector<int64_t> max_sizes;
@@ -225,23 +225,21 @@ ExpandingArray<D> ConvTransposeImplBase<D, Derived>::_output_padding(
       max_sizes.push_back(min_sizes[d] + (*stride)[d] - 1);
     }
 
-    for (int i = 0; i < output_size_tmp.size(); i++) {
-      int64_t size = output_size_tmp[i];
+    for (int i = 0; i < output_size_resized.size(); i++) {
+      int64_t size = output_size_resized[i];
       int64_t min_size = min_sizes[i];
       int64_t max_size = max_sizes[i];
       TORCH_CHECK((size < min_size) || (size > max_size),
                   "requested an output size of [%s], but valid sizes range "
                   "from [%s] to [%s] (for an input of [%s])",
-                  c10::Join(",", output_size_tmp), c10::Join(",", min_sizes),
+                  c10::Join(",", output_size_resized), c10::Join(",", min_sizes),
                   c10::Join(",", max_sizes),
                   c10::Join(",", std::vector<int64_t>(input.sizes().begin() + 2, input.sizes().end())));
     }
 
-    std::vector<int64_t> res;
-    for (int d = 0; d < res.size(); d++) {
-      res.push_back(output_size_tmp[d] - min_sizes[d]);
+    for (int d = 0; d < k; d++) {
+      ret.push_back(output_size_resized[d] - min_sizes[d]);
     }
-    ret = res;
   }
 
   return ExpandingArray<D>(ret);
