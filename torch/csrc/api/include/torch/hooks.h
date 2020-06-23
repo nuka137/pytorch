@@ -1,6 +1,6 @@
 #pragma once
 
-#include <torch/types.h>
+#include <torch/csrc/api/include/torch/types.h>
 
 namespace torch {
 namespace utils {
