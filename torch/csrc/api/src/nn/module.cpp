@@ -340,6 +340,14 @@ void Module::unregister_module(const std::string& name) {
   children_.erase(name);
 }
 
+torch::utils::hooks::RemovableHandle* Module::register_forward_hook(
+    torch::utils::hooks::HookFunction hook) {
+  torch::utils::hooks::RemovableHandle* handle =
+    new torch::utils::hooks::RemovableHandle(&forward_hooks_);
+  forward_hooks_[handle->id()] = hook;
+  return handle;
+}
+
 void Module::pretty_print(std::ostream& stream) const {
   stream << name();
 }
