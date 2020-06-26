@@ -4,6 +4,7 @@
 #include <torch/detail/static.h>
 #include <torch/serialize/archive.h>
 #include <torch/types.h>
+#include <torch/utils.h>
 
 #include <torch/csrc/utils/variadic.h>
 
@@ -114,6 +115,7 @@ class ModuleHolder : torch::detail::ModuleHolderIndicator {
     return impl_.get();
   }
 
+
   /// Calls the `forward()` method of the contained module.
   template <typename... Args>
   auto operator()(Args&&... args)
@@ -122,7 +124,12 @@ class ModuleHolder : torch::detail::ModuleHolderIndicator {
     // (as expected).
     // NOTE: `std::forward` is qualified to prevent VS2017 emitting
     // error C2872: 'std': ambiguous symbol
-    return impl_->forward(::std::forward<Args>(args)...);
+    torch::detail::return_type_of_forward_t<Contained, Args...> output;
+    output = impl_->forward(::std::forward<Args>(args)...);
+    for (auto& hook : forward_hooks_) {
+      hook(impl_, args, output);
+    }
+    return output;
   }
 
   /// Forwards to the subscript operator of the contained module.
@@ -138,7 +145,20 @@ class ModuleHolder : torch::detail::ModuleHolderIndicator {
     return impl_ == nullptr;
   }
 
+  torch::utils::hooks::RemovableHandle* register_forward_hook(
+      torch::utils::hooks::HookFunction hook) {
+    torch::utils::hooks::RemovableHandle* handle =
+      new torch::utils::hooks::RemovableHandle(&forward_hooks_);
+    forward_hooks_[handle->id()] = hook;
+    return handle;
+  }
+
  private:
+
+  /// The registered forward hooks of this `Module`.
+  torch::utils::hooks::HooksDict forward_hooks_;
+
+
   /// In C++17, the two methods below could be written as the following:
   /// if constexpr (std::is_default_constructible_v<Contained>) {
   ///   return std::make_shared<Contained>();

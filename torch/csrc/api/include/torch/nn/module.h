@@ -6,7 +6,6 @@
 #include <torch/ordered_dict.h>
 #include <torch/serialize/archive.h>
 #include <torch/types.h>
-#include <torch/utils.h>
 
 #include <ATen/ATen.h>
 
@@ -514,9 +513,6 @@ class TORCH_API Module : public std::enable_shared_from_this<Module> {
   /// with `name` an exception is thrown.
   void unregister_module(const std::string& name);
 
-  torch::utils::hooks::RemovableHandle* register_forward_hook(
-      torch::utils::hooks::HookFunction hook);
-
  protected:
   /// The following three functions allow a module with default arguments in its
   /// forward method to be used in a Sequential module.
@@ -595,9 +591,6 @@ class TORCH_API Module : public std::enable_shared_from_this<Module> {
 
   /// The registered (direct) submodules of this `Module`.
   OrderedDict<std::string, std::shared_ptr<Module>> children_;
-
-  /// The registered forward hooks of this `Module`.
-  torch::utils::hooks::HooksDict forward_hooks_;
 
   /// The module's name (e.g. "LSTM").
   mutable optional<std::string> name_;
