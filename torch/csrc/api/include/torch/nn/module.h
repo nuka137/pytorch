@@ -6,7 +6,7 @@
 #include <torch/ordered_dict.h>
 #include <torch/serialize/archive.h>
 #include <torch/types.h>
-#include <torch/utils/hooks.h>
+#include <torch/utils.h>
 
 #include <ATen/ATen.h>
 

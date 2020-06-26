@@ -1,5 +1,5 @@
 #include <torch/types.h>
-#include <torch/utils/hooks.h>
+#include <torch/utils.h>
 
 namespace torch {
 namespace utils {
