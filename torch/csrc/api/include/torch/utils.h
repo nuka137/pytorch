@@ -115,7 +115,8 @@ namespace utils {
 namespace hooks {
 
 
-using HookFunction = std::function<Tensor(const nn::Module*, Tensor, Tensor)>;
+using HookFunction = std::function<Tensor(const nn::Module*, const std::vector<Tensor>&,
+                                   const Tensor&)>;
 using HooksDict = std::map<int64_t, HookFunction>;
 
 
